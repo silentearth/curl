@@ -856,6 +856,23 @@ static int waitconnect_getsock(struct connectdata *conn,
     return Curl_ssl_getsock(conn, sock);
 #endif
 
+  if(SOCKS_STATE(conn->cnnct.state)) {
+    sock[0] = conn->sock[FIRSTSOCKET];
+    switch(conn->cnnct.state) {
+    case CONNECT_RESOLVING:
+    case CONNECT_SOCKS_READ:
+    case CONNECT_AUTH_READ:
+    case CONNECT_REQ_READ:
+    case CONNECT_REQ_READ_MORE:
+      rc = GETSOCK_READSOCK(0);
+      break;
+    default:
+      rc = GETSOCK_WRITESOCK(0);
+      break;
+    }
+    return rc;
+  }
+
   for(i = 0; i<2; i++) {
     if(conn->tempsock[i] != CURL_SOCKET_BAD) {
       sock[s] = conn->tempsock[i];
